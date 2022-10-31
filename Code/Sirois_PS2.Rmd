@@ -1,0 +1,99 @@
+---
+title: "Problem Set 2"
+output: html_notebook
+---
+
+# Introduction
+### This .Rmd file will be used to analyze a Halloween dataset by practicing skills and fuctions learned throughout chapters 2-4 in the book Getting Started With R
+
+## Getting set up
+
+```{r}
+rm(list = ls()) # clears R's brain
+library(dplyr) #library() activates the specified packages
+library(ggplot2)
+library(here)
+```
+
+## Pulling in the data
+
+```{r}
+Halloween <- read.csv(here("Data", "Halloween_data_PS2.csv"), stringsAsFactors = TRUE)
+glimpse(Halloween)
+```
+
+## Tidying the data
+### Some of the values under the column heading "Costume" do not follow data formatting priciples. In order to generate accurate analyses, the values need to be uniform in spelling and capitalizations.
+
+```{r}
+str(Halloween) #shows the data structure
+levels(Halloween$Costume) #pulls the levels
+witch <- which(Halloween$Costume == "witch " | Halloween$Costume == "witch" | Halloween$Costume == "Witch") #consolidates all versions of the same response
+Halloween$Costume[witch] <- "witch" #assigns the various responses to one response
+wonder <- which(Halloween$Costume == "wonder woman" | Halloween$Costume == "Wonder woman"| Halloween$Costume == "Wonder Woman")
+Halloween$Costume[wonder] <- "wonder woman"
+clown <- which(Halloween$Costume == "Creepy clown" | Halloween$Costume == "creepy clown" | Halloween$Costume == "clown")
+Halloween$Costume[clown] <- "clown"
+```
+
+See if the levels have been correctly reestablished.
+
+```{r}
+Halloween$Costume <- factor(Halloween$Costume) #resets factor levels
+levels(Halloween$Costume) #pulls the levels
+```
+
+Check the levels for the 'Type' column. This column should be Binary with the options 'Scary' or 'Not scary'
+
+```{r}
+levels(Halloween$Type)
+```
+
+There are some data formatting issues in the 'Type' column. Fix the level errors
+
+```{r}
+Scary <- which(Halloween$Type == "scary" | Halloween$Type == "Scary" | Halloween$Type == "scary ")
+Halloween$Type[Scary] <- "Scary"
+Halloween$Type <- factor(Halloween$Type) #resets levels
+levels(Halloween$Type) #pulls the levels
+```
+
+Now that the data is fixed, it is ready to be worked with. First, a calculation of the mean age and mean number of candy taken needs to be calculated for each costume.
+
+```{r}
+means <- Halloween %>%
+  group_by(Costume, Type) %>% summarise(meanage = mean(age, na.rm = TRUE), meancandy = mean(candy_pieces, na.rm = TRUE)) #na.rm = TRUE voids the use of NA values when calculating the mean
+
+```
+
+With the means calculated, a scatterplot can now to generated.
+```{r}
+ggplot(means, aes(x = meanage, y = meancandy, color = Type)) +
+  geom_point(size = 5) + xlab("Mean age of kid (years)") + ylab("Mean number of pieces taken")
+```
+
+Isolate the data for children who wore 'Not scary' costumes that are 10 years old or younger using the filter function
+
+```{r}
+notscarykids <- filter(Halloween, Type == 'Not scary' | age < 10) #creates a subset with the filtered data
+```
+
+Create a histogram with the notscarykids subset
+
+```{r}
+ggplot(notscarykids, aes(x = age)) + xlab("Age of child") + geom_histogram(bins = 4)
+                                                                        
+```
+
+Generate a side by side box plot of costume type with costume choice and age.
+
+```{r}
+ggplot(Halloween, aes(x = Costume, y = age)) + coord_flip() +
+  geom_boxplot() + 
+  geom_point(size = 4, colour = 'lightgrey', alpha = 0.5) +
+  xlab("Costume choice") +
+  ylab("Child age (years)") +
+  facet_wrap(~Type) #creates two plots sorted by costume type +
+  theme_bw()
+```
+
