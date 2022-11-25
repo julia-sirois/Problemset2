@@ -78,6 +78,10 @@ Isolate the data for children who wore 'Not scary' costumes that are 10 years ol
 notscarykids <- filter(Halloween, Type == 'Not scary' | age < 10) #creates a subset with the filtered data
 ```
 
+You should have used `filter(Halloween, Type == "Not scary" & age <= 10)`. Because you used `|`, you have some scary costumes and some NA ages in `notscarykids`
+
+
+
 Create a histogram with the notscarykids subset
 
 ```{r}
@@ -96,4 +100,6 @@ ggplot(Halloween, aes(x = Costume, y = age)) + coord_flip() +
   facet_wrap(~Type) #creates two plots sorted by costume type +
   theme_bw()
 ```
+The `theme_bw()` isn't doing anything.
+
 
